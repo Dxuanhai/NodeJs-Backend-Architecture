@@ -8,6 +8,8 @@ const ReasonStatusCode = {
   CONFLICT: "CONFLICT ERROR",
 };
 
+const { StatusCodes, ReasonPhrases } = require("../utils/httpStatusCode");
+
 class ErrorResponse extends Error {
   constructor(message, status) {
     super(message);
@@ -32,7 +34,16 @@ class BadRequestError extends ErrorResponse {
   }
 }
 
+class AuthFaiIureError extends ErrorResponse {
+  constructor(
+    message = ReasonPhrases.UNAUTHORIZED,
+    statusCode = StatusCode.UNAUTHORIZED
+  ) {
+    super(message, statusCode);
+  }
+}
 module.exports = {
   BadRequestError,
   ConflictErrorResponse,
+  AuthFaiIureError,
 };
