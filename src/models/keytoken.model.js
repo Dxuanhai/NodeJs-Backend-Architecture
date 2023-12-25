@@ -29,7 +29,8 @@ var keyTokenSchema = new Schema(
     },
   },
   {
-    collation: COLLECTION_NAME,
+    collation: { locale: "en_US", strength: 1 },
+    collection: COLLECTION_NAME,
     timestamps: true,
   }
 );
