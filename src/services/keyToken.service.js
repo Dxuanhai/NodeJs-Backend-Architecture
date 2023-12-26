@@ -46,5 +46,28 @@ class KeyTokenService {
   static findByRefreshToken = async (refreshToken) => {
     return await keytokenModel.findOne({ refreshToken });
   };
+  static updateRefreshToken = async (_id, refreshToken, newRefreshToken) => {
+    return await keytokenModel
+      .updateOne(
+        { _id },
+        {
+          $set: {
+            refreshToken: newRefreshToken,
+          },
+          $addToSet: {
+            refreshTokensUsed: refreshToken,
+          },
+        },
+        {
+          upsert: true,
+        }
+      )
+      .then((result) => {
+        console.log("Update successful:", result);
+      })
+      .catch((error) => {
+        console.error("Update failed:", error);
+      });
+  };
 }
 module.exports = KeyTokenService;

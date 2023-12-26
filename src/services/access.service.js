@@ -20,45 +20,32 @@ const roleShop = {
   EDITER: "EDITER",
   ADMIN: "ADMIN",
 };
-class accessService {
-  static handlerRefreshToken = async (refreshToken) => {
-    const keyUsed = await KeyTokenService.findByRefreshTokenUsed(refreshToken);
-    if (keyUsed) {
-      const { userId, email } = await JWT.verify(
-        refreshToken,
-        keyUsed.privateKey
-      );
-      console.log("check UsserID, Email :: ", userId);
-      await KeyTokenService.deleteKeybyId(userId);
+class AccessService {
+  static handlerRefreshToken = async ({ user, refreshToken, keyStore }) => {
+    if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+      await KeyTokenService.deleteKeybyId(user.userId);
       throw new ForbiddenError("Something went wrong ! please relogin");
     }
+    if (keyStore.refreshToken !== refreshToken)
+      throw new AuthFaiIureError("Shop not registered");
 
-    const holderToken = await KeyTokenService.findByRefreshToken(refreshToken);
-    if (!holderToken) throw new AuthFaiIureError("Shop not registered");
-
-    const { userId, email } = verifyJWT(refreshToken, holderToken.privateKey);
-    console.log("check UsserID, Email [2]:: ", userId, email);
-
-    const foundShop = findByEmail({ email });
+    const foundShop = findByEmail({ email: user.email });
     if (!foundShop) throw new AuthFaiIureError("Shop not registered 2");
 
     const tokens = await createTokenPair(
-      { userId: foundShop._id, email },
-      holderToken.publicKey,
-      holderToken.privateKey
+      { userId: foundShop._id, email: user.email },
+      keyStore.publicKey,
+      keyStore.privateKey
     );
 
-    await holderToken.updateOne({
-      $set: {
-        refreshToken: tokens.refreshToken,
-      },
-      $addToSet: {
-        refreshTokensUsed: refreshToken,
-      },
-    });
+    await KeyTokenService.updateRefreshToken(
+      keyStore._id,
+      refreshToken,
+      tokens.refreshToken
+    );
 
     return {
-      user: { userId, email },
+      user,
       tokens,
     };
   };
@@ -152,4 +139,4 @@ class accessService {
     };
   };
 }
-module.exports = accessService;
+module.exports = AccessService;
