@@ -9,4 +9,8 @@ const { authenticate } = require("../../auth/authUtils");
 router.use(authenticate);
 router.post("", asyncHandler(ProductController.createProduct));
 
+// QUERY
+
+router.get("/drafts/all", asyncHandler(ProductController.getAllDrafsForShop));
+
 module.exports = router;
