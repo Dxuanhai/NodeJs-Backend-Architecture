@@ -4,6 +4,7 @@ const { Schema, model } = require("mongoose");
 const slugify = require("slugify");
 const DOCUMENT_NAME = "Product";
 const COLLECTION_NAME = "Products";
+
 const productSchema = new Schema(
   {
     product_name: { type: String, required: true },
@@ -48,13 +49,13 @@ const productSchema = new Schema(
     },
   },
   {
-    collation: { locale: "en_US", strength: 1 },
     collection: COLLECTION_NAME,
     timestamps: true,
   }
 );
 
 // document middleware
+//productSchema.index({ product_name: "text", product_description: "text" });
 
 productSchema.pre("save", function (next) {
   this.product_slug = slugify(this.product_name, { lower: true });
