@@ -13,7 +13,9 @@ const {
   seachProductsByUser,
   findAllProducts,
   findProductRepo,
+  updateProductById,
 } = require("../models/repositories/product.repo");
+const { removeUndefinedObject, updateNestedObjectParser } = require("../utils");
 
 class ProductFactory {
   static productRegistry = {};
@@ -29,11 +31,11 @@ class ProductFactory {
     return new productClass(payload).createProduct();
   }
 
-  static async updateProduct(type, payload) {
+  static async updateProduct(type, product_id, payload) {
     const productClass = ProductFactory.productRegistry[type];
     if (!productClass)
       throw new BadRequestError(`Invalid product Types: ${type}`);
-    return new productClass(payload).createProduct();
+    return new productClass(payload).updateProduct(product_id);
   }
 
   // PUT
@@ -101,6 +103,13 @@ class Product {
   async createProduct(product_id) {
     return await product.create({ ...this, _id: product_id });
   }
+  async updateProduct(productId, body) {
+    return await updateProductById({
+      productId,
+      body,
+      modelType: product,
+    });
+  }
 }
 
 class Clothing extends Product {
@@ -115,6 +124,21 @@ class Clothing extends Product {
     if (!newProduct) throw new BadRequestError("create new product error");
 
     return newProduct;
+  }
+
+  async updateProduct(productId) {
+    const body = removeUndefinedObject(this);
+    if (body.product_attributes) {
+      await updateProductById({
+        productId,
+        body: updateNestedObjectParser(body),
+        modelType: clothing,
+      });
+    }
+    const updateProduct = await super.updateProduct(productId, {
+      body: updateNestedObjectParser(body),
+    });
+    return updateProduct;
   }
 }
 class Furniture extends Product {
